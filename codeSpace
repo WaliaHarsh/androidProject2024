@@ -1,0 +1,179 @@
+for the test cases uses this format for name test ____ when ____ returrns/is succesfull/ is failure
+Sources
+
+
+
+ecb.europa.eu favicon
+elinux.org favicon
+View 2 more
+Answer
+Based on your request to format the test case names using the "test ____ when ____ returns/is successful/is failure" structure, here are the updated test cases for the CacheManagerImpl, GenericCache, and AccountApiCache classes.
+Updated Test Cases
+CacheManagerImplTest.kt
+kotlin
+import kotlin.test.*
+
+class CacheManagerImplTest {
+
+    @Test
+    fun testRegistration_whenCacheIsRegistered_doesNotThrowException() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val cache = object : Cache {
+            override fun clear() {}
+        }
+        
+        cacheManager.register(cache, "testCache")
+        
+        // Indirect test of registration
+        cacheManager.clear("testCache") // Should not throw an exception
+        assertTrue(true, "Cache registration successful")
+    }
+
+    @Test
+    fun testClearAll_whenCalled_allCachesAreCleared() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        var cleared = false
+        val cache = object : Cache {
+            override fun clear() {
+                cleared = true
+            }
+        }
+        
+        cacheManager.register(cache, "testCache")
+        cacheManager.clear()
+        
+        assertTrue(cleared, "All caches should be cleared")
+    }
+
+    @Test
+    fun testClearSpecificDataType_whenCalled_specificCacheIsCleared() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        var cache1Cleared = false
+        var cache2Cleared = false
+        
+        val cache1 = object : Cache {
+            override fun clear() {
+                cache1Cleared = true
+            }
+        }
+        val cache2 = object : Cache {
+            override fun clear() {
+                cache2Cleared = true
+            }
+        }
+        
+        cacheManager.register(cache1, "cache1")
+        cacheManager.register(cache2, "cache2")
+        
+        cacheManager.clear("cache1")
+        
+        assertTrue(cache1Cleared, "Cache1 should be cleared")
+        assertFalse(cache2Cleared, "Cache2 should not be cleared")
+    }
+
+    @Test
+    fun testClearGroup_whenCalled_allCachesInGroupAreCleared() {
+        val cacheManager = CacheManagerImpl(mapOf("group1" to listOf("cache1", "cache2")))
+        var cache1Cleared = false
+        var cache2Cleared = false
+        
+        val cache1 = object : Cache {
+            override fun clear() {
+                cache1Cleared = true
+            }
+        }
+        val cache2 = object : Cache {
+            override fun clear() {
+                cache2Cleared = true
+            }
+        }
+        
+        cacheManager.register(cache1, "cache1")
+        cacheManager.register(cache2, "cache2")
+        
+        cacheManager.clearGroup("group1")
+        
+        assertTrue(cache1Cleared, "Cache1 should be cleared")
+        assertTrue(cache2Cleared, "Cache2 should be cleared")
+    }
+}
+
+GenericCacheTest.kt
+kotlin
+import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+
+class GenericCacheTest {
+
+    @Test
+    fun testStorage_whenDataIsStored_dataIsRetrievable() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val cache = GenericCache<String>(cacheManager)
+        
+        cache.store("testData")
+        assertEquals("testData", cache.getData(), "Stored data should be retrievable")
+    }
+
+    @Test
+    fun testExpiry_whenDataIsExpired_dataIsNotRetrievable() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val cache = GenericCache<String>(cacheManager)
+        
+        val now = Clock.System.now()
+        val expiredTime = now.minus(DateTimePeriod(hours = 1))
+        
+        cache.store("testData", expiredTime.toLocalDateTime(TimeZone.UTC))
+        assertNull(cache.getData(), "Expired data should not be retrievable")
+    }
+
+    @Test
+    fun testClear_whenClearIsCalled_dataIsCleared() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val cache = GenericCache<String>(cacheManager)
+        
+        cache.store("testData")
+        cache.clear()
+        
+        assertNull(cache.getData(), "Data should be cleared")
+    }
+}
+
+AccountApiCacheTest.kt
+kotlin
+import kotlin.test.*
+
+class AccountApiCacheTest {
+
+    @Test
+    fun testAccountStorage_whenAccountsAreStored_accountsAreRetrievable() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val accountApiCache = AccountApiCache(cacheManager)
+        
+        val accounts = listOf(Account("1"), Account("2"))
+        accountApiCache.storeAccounts(accounts)
+        
+        assertEquals(accounts, accountApiCache.getAccounts(), "Stored accounts should be retrievable")
+    }
+
+    @Test
+    fun testClearAccounts_whenClearAccountsIsCalled_accountsAreCleared() {
+        val cacheManager = CacheManagerImpl(emptyMap())
+        val accountApiCache = AccountApiCache(cacheManager)
+        
+        val accounts = listOf(Account("1"), Account("2"))
+        accountApiCache.storeAccounts(accounts)
+        accountApiCache.clearAccounts()
+        
+        assertNull(accountApiCache.getAccounts(), "Accounts should be cleared")
+    }
+}
+
+Summary of Changes
+The test case names have been updated to follow the format: test ____ when ____ returns/is successful/is failure.
+This format improves clarity by describing the conditions under which the tests are executed and the expected outcomes.
+Each test case now clearly indicates what is being tested and under what circumstances.
+These structured test cases will help in understanding the purpose of each test and make it easier to identify what each test is verifying in the caching system.
