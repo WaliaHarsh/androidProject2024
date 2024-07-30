@@ -1,4 +1,6 @@
-You're right, I apologize for overlooking the CacheExpiryHandlerImpl tests. Let's update those tests to follow the same naming convention. Here's the updated CacheExpiryHandlerImplTest.kt file:
+I apologize for the confusion. You're right that if `.getData()` wasn't mentioned in the High-Level Design (HLD), we shouldn't include it in our tests. Let's revise the `CacheExpiryHandlerImplTest` to focus on the methods that were specified in the HLD. Typically, these would include `store()`, `clear()`, `hasData()`, and `isExpired()`.
+
+Here's an updated version of the `CacheExpiryHandlerImplTest` that doesn't use `.getData()`:
 
 ```kotlin
 import kotlin.test.*
@@ -12,55 +14,7 @@ import kotlinx.datetime.toLocalDateTime
 class CacheExpiryHandlerImplTest {
 
     @Test
-    fun testDataStorage_whenDataIsStored_dataIsRetrievable() {
-        val handler = CacheExpiryHandlerImpl<String>()
-        
-        handler.store("testData")
-        
-        assertTrue(handler.hasData(), "Handler should have data")
-        assertFalse(handler.isExpired(), "Data should not be expired")
-        assertEquals("testData", handler.getData(), "Should be able to retrieve stored data")
-    }
-
-    @Test
-    fun testExpiry_whenDataIsNotExpired_dataIsRetrievable() {
-        val handler = CacheExpiryHandlerImpl<String>()
-        
-        val now = Clock.System.now()
-        val futureTime = now.plus(DateTimePeriod(hours = 1))
-        
-        handler.store("testData", futureTime.toLocalDateTime(TimeZone.UTC))
-        
-        assertFalse(handler.isExpired(), "Data should not be expired")
-        assertEquals("testData", handler.getData(), "Should be able to retrieve non-expired data")
-    }
-
-    @Test
-    fun testExpiry_whenDataIsExpired_dataIsNotRetrievable() {
-        val handler = CacheExpiryHandlerImpl<String>()
-        
-        val now = Clock.System.now()
-        val pastTime = now.minus(DateTimePeriod(hours = 1))
-        
-        handler.store("expiredData", pastTime.toLocalDateTime(TimeZone.UTC))
-        
-        assertTrue(handler.isExpired(), "Data should be expired")
-        assertNull(handler.getData(), "Expired data should not be retrievable")
-    }
-
-    @Test
-    fun testClear_whenClearIsCalled_dataIsCleared() {
-        val handler = CacheExpiryHandlerImpl<String>()
-        
-        handler.store("testData")
-        handler.clear()
-        
-        assertFalse(handler.hasData(), "Handler should not have data after clearing")
-        assertNull(handler.getData(), "Should not be able to retrieve data after clearing")
-    }
-
-    @Test
-    fun testHasData_whenDataIsStored_returnsTrue() {
+    fun testStore_whenDataIsStored_hasDataReturnsTrue() {
         val handler = CacheExpiryHandlerImpl<String>()
         
         handler.store("testData")
@@ -69,21 +23,72 @@ class CacheExpiryHandlerImplTest {
     }
 
     @Test
+    fun testExpiry_whenDataIsNotExpired_isExpiredReturnsFalse() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        val now = Clock.System.now()
+        val futureTime = now.plus(DateTimePeriod(hours = 1))
+        
+        handler.store("testData", futureTime.toLocalDateTime(TimeZone.UTC))
+        
+        assertFalse(handler.isExpired(), "Data should not be expired")
+    }
+
+    @Test
+    fun testExpiry_whenDataIsExpired_isExpiredReturnsTrue() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        val now = Clock.System.now()
+        val pastTime = now.minus(DateTimePeriod(hours = 1))
+        
+        handler.store("expiredData", pastTime.toLocalDateTime(TimeZone.UTC))
+        
+        assertTrue(handler.isExpired(), "Data should be expired")
+    }
+
+    @Test
+    fun testClear_whenClearIsCalled_hasDataReturnsFalse() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        handler.store("testData")
+        handler.clear()
+        
+        assertFalse(handler.hasData(), "Handler should not have data after clearing")
+    }
+
+    @Test
     fun testHasData_whenNoDataIsStored_returnsFalse() {
         val handler = CacheExpiryHandlerImpl<String>()
         
         assertFalse(handler.hasData(), "Handler should not have data when nothing is stored")
     }
+
+    @Test
+    fun testStore_whenDataIsStoredMultipleTimes_hasDataReturnsTrue() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        handler.store("testData1")
+        handler.store("testData2")
+        
+        assertTrue(handler.hasData(), "Handler should have data after multiple stores")
+    }
+
+    @Test
+    fun testExpiry_whenDataIsStoredWithoutExpiryTime_isExpiredReturnsFalse() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        handler.store("testData")
+        
+        assertFalse(handler.isExpired(), "Data stored without expiry time should not be expired")
+    }
 }
 ```
 
-These updated tests for CacheExpiryHandlerImpl follow the requested naming convention and cover the following scenarios:
+This revised test suite focuses on the methods that were likely specified in your HLD:
 
-1. Storing and retrieving data
-2. Checking expiration for non-expired data
-3. Checking expiration for expired data
-4. Clearing data
-5. Checking if data exists after storing
-6. Checking if data exists when nothing is stored
+1. `store()`: We test if data is correctly stored and if `hasData()` returns true after storing.
+2. `clear()`: We verify that `hasData()` returns false after clearing.
+3. `hasData()`: We check its behavior when data is stored and when it's not.
+4. `isExpired()`: We test various scenarios including non-expired data, expired data, and data stored without an expiry time.
 
-Each test name now clearly describes what is being tested and under what conditions, making it easier to understand the purpose of each test and what it's verifying in the CacheExpiryHandlerImpl class.
+These tests maintain the requested naming convention and cover the core functionality of the `CacheExpiryHandlerImpl` without relying on a `getData()` method. If there are any other specific methods or behaviors mentioned in your HLD that aren't covered here, please let me know, and I'll be happy to add more relevant tests.
