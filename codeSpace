@@ -1,3 +1,6 @@
+You're right, I apologize for overlooking the CacheExpiryHandlerImpl tests. Let's update those tests to follow the same naming convention. Here's the updated CacheExpiryHandlerImplTest.kt file:
+
+```kotlin
 import kotlin.test.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimePeriod
@@ -29,4 +32,58 @@ class CacheExpiryHandlerImplTest {
         handler.store("testData", futureTime.toLocalDateTime(TimeZone.UTC))
         
         assertFalse(handler.isExpired(), "Data should not be expired")
-        assertEquals("testData", handler.getData(), "Should be able to retrieve non
+        assertEquals("testData", handler.getData(), "Should be able to retrieve non-expired data")
+    }
+
+    @Test
+    fun testExpiry_whenDataIsExpired_dataIsNotRetrievable() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        val now = Clock.System.now()
+        val pastTime = now.minus(DateTimePeriod(hours = 1))
+        
+        handler.store("expiredData", pastTime.toLocalDateTime(TimeZone.UTC))
+        
+        assertTrue(handler.isExpired(), "Data should be expired")
+        assertNull(handler.getData(), "Expired data should not be retrievable")
+    }
+
+    @Test
+    fun testClear_whenClearIsCalled_dataIsCleared() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        handler.store("testData")
+        handler.clear()
+        
+        assertFalse(handler.hasData(), "Handler should not have data after clearing")
+        assertNull(handler.getData(), "Should not be able to retrieve data after clearing")
+    }
+
+    @Test
+    fun testHasData_whenDataIsStored_returnsTrue() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        handler.store("testData")
+        
+        assertTrue(handler.hasData(), "Handler should have data after storing")
+    }
+
+    @Test
+    fun testHasData_whenNoDataIsStored_returnsFalse() {
+        val handler = CacheExpiryHandlerImpl<String>()
+        
+        assertFalse(handler.hasData(), "Handler should not have data when nothing is stored")
+    }
+}
+```
+
+These updated tests for CacheExpiryHandlerImpl follow the requested naming convention and cover the following scenarios:
+
+1. Storing and retrieving data
+2. Checking expiration for non-expired data
+3. Checking expiration for expired data
+4. Clearing data
+5. Checking if data exists after storing
+6. Checking if data exists when nothing is stored
+
+Each test name now clearly describes what is being tested and under what conditions, making it easier to understand the purpose of each test and what it's verifying in the CacheExpiryHandlerImpl class.
